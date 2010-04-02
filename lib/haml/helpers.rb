@@ -348,18 +348,23 @@ MESSAGE
         haml_buffer.capture_position = position
         block.call(*args)
 
-        captured = haml_buffer.buffer.slice!(position..-1).split(/^/)
+        captured = haml_buffer.buffer.slice!(position..-1)
+        if haml_buffer.options[:ugly]
+          captured
+        else
+          captured = captured.split(/^/)
 
-        min_tabs = nil
-        captured.each do |line|
-          tabs = line.index(/[^ ]/) || line.length
-          min_tabs ||= tabs
-          min_tabs = min_tabs > tabs ? tabs : min_tabs
+          min_tabs = nil
+          captured.each do |line|
+            tabs = line.index(/[^ ]/) || line.length
+            min_tabs ||= tabs
+            min_tabs = min_tabs > tabs ? tabs : min_tabs
+          end
+
+          captured.map do |line|
+            line[min_tabs..-1]
+          end.join
         end
-
-        captured.map do |line|
-          line[min_tabs..-1]
-        end.join
       end
     ensure
       haml_buffer.capture_position = nil
